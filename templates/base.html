@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Eco Transfo — Contrats{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+  {% if current_user.is_authenticated %}
+  <!-- ── Barre d'alertes contrats critiques ── -->
+  {% set alertes = [] %}
+  {% for emp in alertes_globales if alertes_globales is defined %}{% endfor %}
+  {% if alertes_globales is defined and alertes_globales %}
+  <div class="alert-bar" id="alertBar">
+    <div class="alert-bar-inner">
+      <span class="alert-bar-icon">⚠️</span>
+      <span class="alert-bar-label">Contrats expirant bientôt :</span>
+      <div class="alert-bar-chips">
+        {% for emp in alertes_globales %}
+        <a href="{{ url_for('employe_detail', emp_id=emp.id) }}" class="alert-chip {% if emp.jours_restants == 0 %}chip-today{% elif emp.jours_restants <= 2 %}chip-urgent{% else %}chip-warning{% endif %}">
+          {{ emp.prenom }} {{ emp.nom }}
+          <span class="chip-days">
+            {% if emp.jours_restants == 0 %}Aujourd'hui
+            {% elif emp.jours_restants == 1 %}Demain
+            {% else %}{{ emp.jours_restants }}j{% endif %}
+          </span>
+        </a>
+        {% endfor %}
+      </div>
+      <button class="alert-bar-close" onclick="document.getElementById('alertBar').style.display='none'">✕</button>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Navbar ── -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="{{ url_for('dashboard') }}" class="nav-logo">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Eco Transfo" height="38">
+      </a>
+      <div class="nav-right">
+        <span class="nav-user">👤 {{ current_user.nom }}</span>
+        <a href="{{ url_for('logout') }}" class="nav-logout">Déconnexion</a>
+      </div>
+    </div>
+  </nav>
+  {% endif %}
+
+  <!-- ── Flash messages ── -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-zone">
+      {% for category, message in messages %}
+      <div class="flash flash--{{ category }}">
+        {% if category == 'success' %}✅{% elif category == 'error' %}❌{% else %}ℹ️{% endif %}
+        {{ message }}
+        <button onclick="this.parentElement.remove()">✕</button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

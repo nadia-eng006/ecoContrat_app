@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}{{ emp.prenom }} {{ emp.nom }} — Eco Transfo Contrats{% endblock %}
+{% block body_class %}detail-page{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+
+  <!-- Retour -->
+  <a href="{{ url_for('dashboard') }}" class="back-link">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Retour à la liste
+  </a>
+
+  <div class="detail-card">
+
+    <!-- ── En-tête ── -->
+    <div class="detail-header status-bg-{{ emp.statut }}">
+      <div class="detail-avatar-wrap">
+        <div class="detail-avatar">{{ emp.prenom[0] }}{{ emp.nom[0] }}</div>
+      </div>
+      <div class="detail-header-info">
+        <h1 class="detail-name">{{ emp.prenom }} {{ emp.nom }}</h1>
+        <p class="detail-poste">{{ emp.poste }}</p>
+        <span class="detail-status-badge status-badge-{{ emp.statut }}">
+          {% if emp.statut == 'expire' %}⛔ Contrat expiré
+          {% elif emp.statut == 'critique' %}⚠️ Expire très bientôt
+          {% elif emp.statut == 'attention' %}🔔 Expire dans moins d'un mois
+          {% else %}✅ Contrat actif
+          {% endif %}
+        </span>
+      </div>
+    </div>
+
+    <!-- ── Durée restante — barre de progression ── -->
+    <div class="duration-section">
+      <div class="duration-top">
+        <span class="duration-label">Durée restante</span>
+        <span class="duration-value duration-value--{{ emp.statut }}">
+          {% if emp.statut == 'expire' %}
+            Expiré depuis {{ (today - emp.date_fin).days }} jour{{ 's' if (today - emp.date_fin).days > 1 }}
+          {% else %}
+            {{ emp.duree_restante_label }}
+          {% endif %}
+        </span>
+      </div>
+
+      <!-- Barre de progression du contrat -->
+      {% set total_days = (emp.date_fin - emp.date_debut).days %}
+      {% set elapsed    = (today - emp.date_debut).days %}
+      {% set pct_elapsed = [[elapsed * 100 // total_days if total_days > 0 else 0, 0] | max, 100] | min %}
+
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill status-fill-{{ emp.statut }}"
+               style="width: {{ pct_elapsed }}%"></div>
+        </div>
+        <div class="progress-labels">
+          <span>{{ emp.date_debut.strftime('%d/%m/%Y') }}</span>
+          <span>{{ pct_elapsed }}% écoulé</span>
+          <span>{{ emp.date_fin.strftime('%d/%m/%Y') }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Détails du contrat ── -->
+    <div class="detail-grid">
+
+      <div class="detail-item">
+        <div class="detail-item-icon">📋</div>
+        <div class="detail-item-content">
+          <span class="detail-item-label">Durée contractuelle</span>
+          <span class="detail-item-value">{{ emp.duree_contrat }}</span>
+        </div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-item-icon">📅</div>
+        <div class="detail-item-content">
+          <span class="detail-item-label">Date de début</span>
+          <span class="detail-item-value">{{ emp.date_debut.strftime('%d %B %Y') }}</span>
+        </div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-item-icon">🏁</div>
+        <div class="detail-item-content">
+          <span class="detail-item-label">Date de fin</span>
+          <span class="detail-item-value {% if emp.statut in ['critique','expire'] %}text-danger{% endif %}">
+            {{ emp.date_fin.strftime('%d %B %Y') }}
+          </span>
+        </div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-item-icon">📊</div>
+        <div class="detail-item-content">
+          <span class="detail-item-label">Jours restants</span>
+          <span class="detail-item-value {% if emp.statut in ['critique','expire'] %}text-danger{% endif %}">
+            {% if emp.jours_restants < 0 %}
+              Expiré ({{ emp.jours_restants | abs }} jours de dépassement)
+            {% else %}
+              {{ emp.jours_restants }} jour{{ 's' if emp.jours_restants != 1 }}
+            {% endif %}
+          </span>
+        </div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-item-icon">⏱️</div>
+        <div class="detail-item-content">
+          <span class="detail-item-label">Durée totale du contrat</span>
+          <span class="detail-item-value">{{ total_days }} jours</span>
+        </div>
+      </div>
+
+      <div class="detail-item">
+        <div class="detail-item-icon">📆</div>
+        <div class="detail-item-content">
+          <span class="detail-item-label">Ajouté le</span>
+          <span class="detail-item-value">{{ emp.date_creation.strftime('%d/%m/%Y à %H:%M') }}</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Actions ── -->
+    <div class="detail-actions">
+      <a href="{{ url_for('dashboard') }}" class="btn-secondary">← Retour</a>
+      <form method="POST" action="{{ url_for('supprimer_employe', emp_id=emp.id) }}"
+            onsubmit="return confirm('Supprimer {{ emp.prenom }} {{ emp.nom }} ? Cette action est irréversible.')">
+        <button type="submit" class="btn-danger">🗑️ Supprimer ce contrat</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
