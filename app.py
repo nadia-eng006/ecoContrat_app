@@ -4,9 +4,13 @@ from models import db, User, Employe
 from datetime import date, datetime
 import os
 
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+
 app = Flask(__name__)
-app.secret_key = 'eco_contrat_secret_2026'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///eco_contrat.db'
+app.secret_key = os.environ.get("SECRET_KEY", "dev_key")
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'instance', 'eco_contrat.db')
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/eco_contrat.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
